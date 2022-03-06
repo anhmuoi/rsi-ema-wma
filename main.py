@@ -45,7 +45,7 @@ def rsi_signal(df):
                             print(abs(df['rsi'][i] - df['rsi'][j]),i,j,'buy')
                         elif (df['rsi_wma'][j] < df['rsi_ema'][j]) or (df['rsi'][j] > df['rsi_wma'][j]):
                             df.at[i, 'rsi_start'] = False
-            elif (df['rsi_ema'][i+2] > df['rsi_wma'][i+2]): 
+            elif (df['rsi_ema'][i+1] > df['rsi_wma'][i+1]): 
                 for j in range(i+1, len(df)-1):
                     if (df['rsi_start'][i] == True):
                         if(((df['rsi'][j] == df['rsi_ema'][j]) or ((df['rsi_ema'][j] - df['rsi'][j]<0) and (df['rsi_ema'][j+1] - df['rsi'][j+1]>0))) and (abs(df['rsi'][i] - df['rsi'][j]) > SLOPE)):
