@@ -35,7 +35,8 @@ exchange.set_sandbox_mode(True)
 def rsi_signal(df):
     
     for i in range(45,len(df)-1):
-        if (abs(df['rsi'][i] - df['rsi_wma'][i]) < 1.5) and (abs(df['rsi'][i] - df['rsi_ema'][i]) < 1.5) and (abs(df['rsi_ema'][i] - df['rsi_wma'][i]) < 1.5):
+        tmp = (df['rsi'][i] + df['rsi'][i+1]) / 2
+        if (((abs(df['rsi'][i] - df['rsi_wma'][i]) < 1.5) and (abs(df['rsi'][i] - df['rsi_ema'][i])) < 1.5) or ((abs(tmp - df['rsi_wma'][i]) < 1.5) and (abs(tmp - df['rsi_ema'][i]) < 1.5))) and (abs(df['rsi_ema'][i] - df['rsi_wma'][i]) < 1.5):
             df.at[i, 'rsi_start'] = True
             if (df['rsi_ema'][i+1] < df['rsi_wma'][i+1]):
                 for j in range(i+1, len(df)-1):
