@@ -1,6 +1,6 @@
-from asyncio.windows_events import NULL
-from re import M
+from unittest import result
 import ccxt
+from numpy import NaN
 import config
 import schedule
 import pandas as pd
@@ -71,52 +71,52 @@ def rsi_signal(df):
                 df.at[i, 'start_sell'] = False 
     return df
 
-stoploss = NULL
-takeprofit = NULL
-rsi_buy = NULL    
+stoploss = 0
+takeprofit = 0
+rsi_tmp = 0    
 # check buy sell signals
 def check_buy_sell_signals(df):
     last_row_index = len(df.index) - 1
     global stoploss
     global takeprofit
-    global rsi_buy 
+    global rsi_tmp 
 
     if (exchange.fetch_balance()['BTC']['free'] >= 0.001):
-        if (df['start_buy'][last_row_index] and df['start_buy'][last_row_index] == True):
+        if (df['start_buy'][last_row_index] == True):
             print('buy buy buy')
             order = exchange.create_market_buy_order('BTC/USDT', 0.0005)
             print(order)
-            rsi_buy = df['rsi'][last_row_index]
-            if (30 <= rsi_buy <= 40):
+            rsi_tmp = df['rsi'][last_row_index]
+            if (30 <= rsi_tmp <= 40):
                 takeprofit = df['close'][last_row_index] + df['close'][last_row_index] * 0.08
             stoploss = df['close'][last_row_index]
 
 
-        if ((df['close'][last_row_index] > stoploss) and (stoploss != 0)) or (df['close'][last_row_index] < takeprofit and takeprofit != 0) or ((rsi_buy > 65 and (df['rsi'][last_row_index] <= 40))):
+        if ((df['close'][last_row_index] <= stoploss) and (stoploss != 0)) or ((df['close'][last_row_index] >= takeprofit) and (takeprofit != 0)) or ((rsi_tmp < 30 and (rsi_tmp != 0) and (df['rsi'][last_row_index] > 65))):
             print('sell')
             order = exchange.create_market_sell_order('BTC/USDT', 0.0005)
             print(order)
-            stoploss = NULL
-            takeprofit = NULL
-            rsi_buy = NULL    
+            stoploss = 0
+            takeprofit = 0
+            rsi_tmp = 0    
 
 
         if (df['start_sell'][last_row_index] and df['start_sell'][last_row_index] == True):
             print('sell sell sell')
             order = exchange.create_market_sell_order('BTC/USDT', 0.0005)
             print(order) 
-            rsi_buy = df['rsi'][last_row_index]
+            rsi_tmp = df['rsi'][last_row_index]
             stoploss = df['close'][last_row_index]
             takeprofit = df['close'][last_row_index] - df['close'][last_row_index] * 0.2
 
 
-        if (df['close'][last_row_index] < stoploss) or ((df['close'][last_row_index] > takeprofit) and (takeprofit != 0)) or ((rsi_buy < 30 and rsi_buy != 0) and (df['rsi'][last_row_index] > 65)):
+        if ((df['close'][last_row_index] >= stoploss) and (stoploss != 0)) or ((df['close'][last_row_index] <= takeprofit) and (takeprofit != 0)) or ((rsi_tmp >= 65 and rsi_tmp != 0) and (df['rsi'][last_row_index] <= 40)):
             print('buy')
             order = exchange.create_market_buy_order('BTC/USDT', 0.0005)
             print(order)
-            stoploss = NULL
-            takeprofit = NULL
-            rsi_buy = NULL    
+            stoploss = 0
+            takeprofit = 0
+            rsi_tmp = 0    
 
 
            
@@ -140,9 +140,10 @@ def run_bot():
 
     rsi_df =  rsi_signal(df)
     check_buy_sell_signals(rsi_df)
-    rsi_df = pd.DataFrame(rsi_df[:-1], columns=['timestamp','start_buy', 'start_sell'])
-    print(rsi_df)
+    rsi_df = pd.DataFrame(rsi_df, columns=['timestamp','start_buy', 'start_sell'])
 
+    result = rsi_df[(rsi_df['start_buy'] == True) | (rsi_df['start_sell'] == True)]
+    print(result)
 # mỗi 2 giây chạy một lần  
 schedule.every(2).seconds.do(run_bot)
 
