@@ -1,10 +1,7 @@
-from unittest import result
 import ccxt
-from numpy import NaN
 import config
 import schedule
 import pandas as pd
-import pandas_ta as ta
 import talib as ta
 
 pd.set_option('display.max_rows', None)
