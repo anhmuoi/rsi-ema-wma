@@ -32,6 +32,11 @@ exchange.set_sandbox_mode(True)
 
 def rsi_signal(df):
     
+    # set start_buy and start_sell to False
+    df['start_buy'] = False
+    df['start_sell'] = False
+
+
     for i in range(45,len(df)-1):
         tmp = (df['rsi'][i] + df['rsi'][i+1]) / 2
         if (((abs(df['rsi'][i] - df['rsi_wma'][i]) < 1.5) and (abs(df['rsi'][i] - df['rsi_ema'][i])) < 1.5) or ((abs(tmp - df['rsi_wma'][i]) < 1.5) and (abs(tmp - df['rsi_ema'][i]) < 1.5))) and (abs(df['rsi_ema'][i] - df['rsi_wma'][i]) < 1.5):
