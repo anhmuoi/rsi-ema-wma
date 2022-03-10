@@ -13,12 +13,13 @@ warnings.filterwarnings('ignore')
 from datetime import datetime
 import time
 
-
+SYMBOL = 'ETHUSDT'
+SYMBOL_FREE = 'ETH'
 LIMIT = 1000
 
 TIME_FRAME = '5m'
 
-SLOPE = 30
+SLOPE = 15
 #this is the slope of rsi
 
 exchange = ccxt.binance({
@@ -42,28 +43,32 @@ def rsi_signal(df):
         if (((abs(df['rsi'][i] - df['rsi_wma'][i]) < 1.5) and (abs(df['rsi'][i] - df['rsi_ema'][i])) < 1.5) or ((abs(tmp - df['rsi_wma'][i]) < 1.5) and (abs(tmp - df['rsi_ema'][i]) < 1.5))) and (abs(df['rsi_ema'][i] - df['rsi_wma'][i]) < 1.5):
             df.at[i, 'rsi_start'] = True
             if (df['rsi_ema'][i+1] < df['rsi_wma'][i+1]):
+                count = 0
                 for j in range(i+1, len(df)-1):
                     if (df['rsi_start'][i] == True):
-                        if(((df['rsi'][j] == df['rsi_ema'][j]) or ((df['rsi_ema'][j] - df['rsi'][j]>0) and (df['rsi_ema'][j+1] - df['rsi'][j+1]<0))) and (abs(df['rsi'][i] - df['rsi'][j]) > SLOPE)):
+                        if(((df['rsi'][j] == df['rsi_ema'][j]) or ((df['rsi_ema'][j] - df['rsi'][j]>0) and (df['rsi_ema'][j+1] - df['rsi'][j+1]<0))) and (abs(df['rsi'][i] - df['rsi'][j]) > SLOPE)) and count<2:
                             df.at[j, 'start_buy'] = True
                             df.at[j, 'start_sell'] = False
+                            count = count + 1
                             print(abs(df['rsi'][i] - df['rsi'][j]),i,j,'buy')
                         elif (df['rsi_wma'][j] < df['rsi_ema'][j]) or (df['rsi'][j] > df['rsi_wma'][j]):
                             df.at[i, 'rsi_start'] = False
-                        if(df['rsi'][len(df)-1] == df['rsi_ema'][len(df)-1]):
-                            df.at[len(df)-1, 'start_sell'] = True
-                            df.at[len(df)-1, 'start_buy'] = False
-                            print(abs(df['rsi'][i] - df['rsi'][j]),i,j,'sell')
+                        if(df['rsi'][len(df)-1] == df['rsi_ema'][len(df)-1]) or ((df['rsi_ema'][len(df)-2] - df['rsi'][len(df)-2]>0) and (df['rsi_ema'][len(df)-1] - df['rsi'][len(df)-1]<0)) and count<2 and j == len(df)-2:
+                            df.at[len(df)-1, 'start_buy'] = True
+                            df.at[len(df)-1, 'start_sell'] = False
+                            print(abs(df['rsi'][i] - df['rsi'][j]),i,j,'buy')
             elif (df['rsi_ema'][i+1] > df['rsi_wma'][i+1]):
+                count = 0
                 for j in range(i+1, len(df)-1):
                     if (df['rsi_start'][i] == True):
-                        if(((df['rsi'][j] == df['rsi_ema'][j]) or ((df['rsi_ema'][j] - df['rsi'][j]<0) and (df['rsi_ema'][j+1] - df['rsi'][j+1]>0))) and (abs(df['rsi'][i] - df['rsi'][j]) > SLOPE)):
+                        if(((df['rsi'][j] == df['rsi_ema'][j]) or ((df['rsi_ema'][j] - df['rsi'][j]<0) and (df['rsi_ema'][j+1] - df['rsi'][j+1]>0))) and (abs(df['rsi'][i] - df['rsi'][j]) > SLOPE)) and count<2:
                             df.at[j, 'start_sell'] = True
                             df.at[j, 'start_buy'] = False
+                            count = count + 1
                             print(abs(df['rsi'][i] - df['rsi'][j]),i,j,'sell')
                         elif (df['rsi_wma'][j] > df['rsi_ema'][j]) or (df['rsi'][j] < df['rsi_wma'][j]):
                             df.at[i, 'rsi_start'] = False 
-                        if(df['rsi'][len(df)-1] == df['rsi_ema'][len(df)-1]):
+                        if(df['rsi'][len(df)-1] == df['rsi_ema'][len(df)-1]) or ((df['rsi_ema'][len(df)-2] - df['rsi'][len(df)-2]<0) and (df['rsi_ema'][len(df)-1] - df['rsi'][len(df)-1]>0)) and count<2 and j == len(df)-2:
                             df.at[len(df)-1, 'start_sell'] = True
                             df.at[len(df)-1, 'start_buy'] = False
                             print(abs(df['rsi'][i] - df['rsi'][j]),i,j,'sell')
@@ -75,50 +80,58 @@ def rsi_signal(df):
 
 stoploss = 0
 takeprofit = 0
-rsi_tmp = 0    
+rsi_tmp = 0
+buy = False    
+sell = False
 # check buy sell signals
 def check_buy_sell_signals(df):
     last_row_index = len(df.index) - 1
     global stoploss
     global takeprofit
     global rsi_tmp 
+    global buy
+    global sell
 
-    if (exchange.fetch_balance()['BTC']['free'] >= 0.001):
+    if (exchange.fetch_balance()[SYMBOL_FREE]['free'] >= 0.001):
         if (df['start_buy'][last_row_index] == True):
             print('buy buy buy')
-            order = exchange.create_market_buy_order('BTC/USDT', 0.0005)
+            order = exchange.create_market_buy_order(SYMBOL, 0.0005)
             print(order)
             rsi_tmp = df['rsi'][last_row_index]
             if (30 <= rsi_tmp <= 40):
                 takeprofit = df['close'][last_row_index] + df['close'][last_row_index] * 0.08
-            stoploss = df['close'][last_row_index]
+            stoploss = df['close'][last_row_index] - df['close'][last_row_index] * 0.1
+            buy = True
 
 
-        if ((df['close'][last_row_index] <= stoploss) and (stoploss != 0)) or ((df['close'][last_row_index] >= takeprofit) and (takeprofit != 0)) or ((rsi_tmp < 30 and (rsi_tmp != 0) and (df['rsi'][last_row_index] > 65))):
+        if ((df['close'][last_row_index] <= stoploss) and (stoploss != 0)) or ((df['close'][last_row_index] >= takeprofit) and (takeprofit != 0)) or ((rsi_tmp < 30 and (rsi_tmp != 0) and (df['rsi'][last_row_index] > 65))) or (((df['rsi'][last_row_index] == df['rsi_ema'][last_row_index])  or ((df['rsi'][last_row_index-1] > df['rsi_ema'][last_row_index-1]) and (df['rsi'][last_row_index] < df['rsi_ema'][last_row_index]))) and (df['rsi_wma'][last_row_index] < df['rsi_ema'][last_row_index]) and buy == True):
             print('sell')
-            order = exchange.create_market_sell_order('BTC/USDT', 0.0005)
+            order = exchange.create_market_sell_order(SYMBOL, 0.0005)
             print(order)
             stoploss = 0
             takeprofit = 0
             rsi_tmp = 0    
+            buy = False
 
 
         if (df['start_sell'][last_row_index] and df['start_sell'][last_row_index] == True):
             print('sell sell sell')
-            order = exchange.create_market_sell_order('BTC/USDT', 0.0005)
+            order = exchange.create_market_sell_order(SYMBOL, 0.0005)
             print(order) 
             rsi_tmp = df['rsi'][last_row_index]
-            stoploss = df['close'][last_row_index]
+            stoploss = df['close'][last_row_index] + df['close'][last_row_index] * 0.1
             takeprofit = df['close'][last_row_index] - df['close'][last_row_index] * 0.2
+            sell = True
 
 
-        if ((df['close'][last_row_index] >= stoploss) and (stoploss != 0)) or ((df['close'][last_row_index] <= takeprofit) and (takeprofit != 0)) or ((rsi_tmp >= 65 and rsi_tmp != 0) and (df['rsi'][last_row_index] <= 40)):
+        if ((df['close'][last_row_index] >= stoploss) and (stoploss != 0)) or ((df['close'][last_row_index] <= takeprofit) and (takeprofit != 0)) or ((rsi_tmp >= 65 and rsi_tmp != 0) and (df['rsi'][last_row_index] <= 40)) or (((df['rsi'][last_row_index] == df['rsi_ema'][last_row_index])  or ((df['rsi'][last_row_index-1] < df['rsi_ema'][last_row_index-1]) and (df['rsi'][last_row_index] > df['rsi_ema'][last_row_index]))) and (df['rsi_wma'][last_row_index] > df['rsi_ema'][last_row_index]) and sell == True):
             print('buy')
-            order = exchange.create_market_buy_order('BTC/USDT', 0.0005)
+            order = exchange.create_market_buy_order(SYMBOL, 0.0005)
             print(order)
             stoploss = 0
             takeprofit = 0
-            rsi_tmp = 0    
+            rsi_tmp = 0   
+            sell = False 
 
 
            
@@ -128,7 +141,7 @@ def run_bot():
     print(f"Fetching new bars for {datetime.now().isoformat()}")
     # order = exchange.create_order(symbol='BTC/USDT',type='market',amount=0.01,side='buy')
     # print(order)
-    bars = exchange.fetch_ohlcv('BTC/USDT', timeframe=TIME_FRAME, limit=LIMIT)
+    bars = exchange.fetch_ohlcv(SYMBOL, timeframe=TIME_FRAME, limit=LIMIT)
 
     df = pd.DataFrame(bars[:-1], columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
     df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
