@@ -14,14 +14,15 @@ warnings.filterwarnings('ignore')
 from datetime import datetime
 import time
 
-SYMBOL = 'ETHUSDT'
-SYMBOL_FREE = 'ETH'
+SYMBOL = 'BTC/USDT'
+SYMBOL_FREE = 'BTC'
 LIMIT = 1000
 
 TIME_FRAME = '5m'
 
-SLOPE = 15
+SLOPE = 0
 #this is the slope of rsi
+
 
 exchange = ccxt.binance({
     "apiKey": config.BINANCE_API_KEY,
@@ -70,42 +71,40 @@ def rsi_signal(df):
 
     for i in range(45,len(df)-1):
         tmp = (df['rsi'][i] + df['rsi'][i+1]) / 2
-        if (((abs(df['rsi'][i] - df['rsi_wma'][i]) < 1.5) and (abs(df['rsi'][i] - df['rsi_ema'][i])) < 1.5) or ((abs(tmp - df['rsi_wma'][i]) < 1.5) and (abs(tmp - df['rsi_ema'][i]) < 1.5))) and (abs(df['rsi_ema'][i] - df['rsi_wma'][i]) < 1.5):
+        if (((abs(df['rsi'][i] - df['rsi_wma'][i]) < 2.5) and (abs(df['rsi'][i] - df['rsi_ema'][i])) < 2.5) or ((abs(tmp - df['rsi_wma'][i]) < 2.5) and (abs(tmp - df['rsi_ema'][i]) < 2.5))) and (abs(df['rsi_ema'][i] - df['rsi_wma'][i]) < 2.5):
             df.at[i, 'rsi_start'] = True
-            if (df['rsi_ema'][i+1] < df['rsi_wma'][i+1]) and (printAngle((20, df['rsi'][i]),(25, df['rsi_ema'][i+1]),(25, df['rsi'][i+1])) > 30):
+            if (df['rsi'][i+1] < df['rsi_wma'][i+1]) and (printAngle((20, df['rsi'][i]),(25, df['rsi_ema'][i+1]),(25, df['rsi'][i+1])) > 30):
                 count = 0
                 for j in range(i+1, len(df)-1):
                     if (df['rsi_start'][i] == True):
                         if(((df['rsi'][j] == df['rsi_ema'][j]) or ((df['rsi_ema'][j] - df['rsi'][j]>0) and (df['rsi_ema'][j+1] - df['rsi'][j+1]<0))) and (abs(df['rsi'][i] - df['rsi'][j]) > SLOPE)) and count<2:
-                            df.at[j, 'start_buy'] = True
-                            df.at[j, 'start_sell'] = False
+                            df.at[j+1, 'start_buy'] = True
+                            df.at[j+1, 'start_sell'] = False
                             count = count + 1
                             print(abs(df['rsi'][i] - df['rsi'][j]),i,j,'buy')
-                        elif (df['rsi_wma'][j] < df['rsi_ema'][j]) or (df['rsi'][j] > df['rsi_wma'][j]):
+                        elif (df['rsi'][j] > df['rsi_wma'][j]) or count == 2:
                             df.at[i, 'rsi_start'] = False
-                        if(df['rsi'][len(df)-1] == df['rsi_ema'][len(df)-1]) or ((df['rsi_ema'][len(df)-2] - df['rsi'][len(df)-2]>0) and (df['rsi_ema'][len(df)-1] - df['rsi'][len(df)-1]<0)) and count<2 and j == len(df)-2:
+                            count = 0
+                        if(df['rsi'][len(df)-1] == df['rsi_ema'][len(df)-1]) or ((df['rsi_ema'][len(df)-2] - df['rsi'][len(df)-2]>0) and (df['rsi_ema'][len(df)-1] - df['rsi'][len(df)-1]<0)) and count<2 and j == len(df)-1:
                             df.at[len(df)-1, 'start_buy'] = True
                             df.at[len(df)-1, 'start_sell'] = False
                             print(abs(df['rsi'][i] - df['rsi'][j]),i,j,'buy')
-            elif (df['rsi_ema'][i+1] > df['rsi_wma'][i+1]) and (printAngle((20, df['rsi'][i]),(25, df['rsi_ema'][i+1]),(25, df['rsi'][i+1])) > 30):
+            elif (df['rsi'][i+1] > df['rsi_wma'][i+1]) and (printAngle((20, df['rsi'][i]),(25, df['rsi_ema'][i+1]),(25, df['rsi'][i+1])) > 30):
                 count = 0
                 for j in range(i+1, len(df)-1):
                     if (df['rsi_start'][i] == True):
                         if(((df['rsi'][j] == df['rsi_ema'][j]) or ((df['rsi_ema'][j] - df['rsi'][j]<0) and (df['rsi_ema'][j+1] - df['rsi'][j+1]>0))) and (abs(df['rsi'][i] - df['rsi'][j]) > SLOPE)) and count<2:
-                            df.at[j, 'start_sell'] = True
-                            df.at[j, 'start_buy'] = False
+                            df.at[j+1, 'start_sell'] = True
+                            df.at[j+1, 'start_buy'] = False
                             count = count + 1
                             print(abs(df['rsi'][i] - df['rsi'][j]),i,j,'sell')
-                        elif (df['rsi_wma'][j] > df['rsi_ema'][j]) or (df['rsi'][j] < df['rsi_wma'][j]):
+                        elif (df['rsi'][j] < df['rsi_wma'][j]) or count == 2:
                             df.at[i, 'rsi_start'] = False 
-                        if(df['rsi'][len(df)-1] == df['rsi_ema'][len(df)-1]) or ((df['rsi_ema'][len(df)-2] - df['rsi'][len(df)-2]<0) and (df['rsi_ema'][len(df)-1] - df['rsi'][len(df)-1]>0)) and count<2 and j == len(df)-2:
+                            count = 0
+                        if(df['rsi'][len(df)-1] == df['rsi_ema'][len(df)-1]) or ((df['rsi_ema'][len(df)-2] - df['rsi'][len(df)-2]<0) and (df['rsi_ema'][len(df)-1] - df['rsi'][len(df)-1]>0)) and count<2 and j == len(df)-1:
                             df.at[len(df)-1, 'start_sell'] = True
                             df.at[len(df)-1, 'start_buy'] = False
                             print(abs(df['rsi'][i] - df['rsi'][j]),i,j,'sell')
-            else: 
-                df.at[i, 'rsi_start'] = False
-                df.at[i, 'start_buy'] = False
-                df.at[i, 'start_sell'] = False 
     return df
 
 stoploss = 0
