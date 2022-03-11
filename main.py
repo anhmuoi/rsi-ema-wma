@@ -3,6 +3,7 @@ import config
 import schedule
 import pandas as pd
 import talib as ta
+import math as math
 
 pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns', None)
@@ -31,6 +32,35 @@ exchange.set_sandbox_mode(True)
 
 
 
+def lengthSquare(X, Y):
+    xDiff = X[0] - Y[0]
+    yDiff = X[1] - Y[1]
+    return xDiff * xDiff + yDiff * yDiff        
+
+def printAngle(A, B, C):
+     
+    # Square of lengths be a2, b2, c2
+    a2 = lengthSquare(B, C)
+    b2 = lengthSquare(A, C)
+    c2 = lengthSquare(A, B)
+ 
+    # length of sides be a, b, c
+    a = math.sqrt(a2)
+    b = math.sqrt(b2)
+    c = math.sqrt(c2)
+ 
+    # From Cosine law
+    alpha = math.acos((b2 + c2 - a2) / (2 * b * c))
+    # betta = math.acos((a2 + c2 - b2) / (2 * a * c))
+    # gamma = math.acos((a2 + b2 - c2) / (2 * a * b))
+    # Converting to degree
+    alpha = alpha * 180 / math.pi
+    # betta = betta * 180 / math.pi
+    # gamma = gamma * 180 / math.pi
+ 
+    return alpha
+
+
 def rsi_signal(df):
     
     # set start_buy and start_sell to False
@@ -42,7 +72,7 @@ def rsi_signal(df):
         tmp = (df['rsi'][i] + df['rsi'][i+1]) / 2
         if (((abs(df['rsi'][i] - df['rsi_wma'][i]) < 1.5) and (abs(df['rsi'][i] - df['rsi_ema'][i])) < 1.5) or ((abs(tmp - df['rsi_wma'][i]) < 1.5) and (abs(tmp - df['rsi_ema'][i]) < 1.5))) and (abs(df['rsi_ema'][i] - df['rsi_wma'][i]) < 1.5):
             df.at[i, 'rsi_start'] = True
-            if (df['rsi_ema'][i+1] < df['rsi_wma'][i+1]):
+            if (df['rsi_ema'][i+1] < df['rsi_wma'][i+1]) and (printAngle((20, df['rsi'][i]),(25, df['rsi_ema'][i+1]),(25, df['rsi'][i+1])) > 30):
                 count = 0
                 for j in range(i+1, len(df)-1):
                     if (df['rsi_start'][i] == True):
@@ -57,7 +87,7 @@ def rsi_signal(df):
                             df.at[len(df)-1, 'start_buy'] = True
                             df.at[len(df)-1, 'start_sell'] = False
                             print(abs(df['rsi'][i] - df['rsi'][j]),i,j,'buy')
-            elif (df['rsi_ema'][i+1] > df['rsi_wma'][i+1]):
+            elif (df['rsi_ema'][i+1] > df['rsi_wma'][i+1]) and (printAngle((20, df['rsi'][i]),(25, df['rsi_ema'][i+1]),(25, df['rsi'][i+1])) > 30):
                 count = 0
                 for j in range(i+1, len(df)-1):
                     if (df['rsi_start'][i] == True):
@@ -134,13 +164,12 @@ def check_buy_sell_signals(df):
             sell = False 
 
 
-           
 
 
 def run_bot():
     print(f"Fetching new bars for {datetime.now().isoformat()}")
     # order = exchange.create_order(symbol='BTC/USDT',type='market',amount=0.01,side='buy')
-    # print(order)
+    # # print(order)
     bars = exchange.fetch_ohlcv(SYMBOL, timeframe=TIME_FRAME, limit=LIMIT)
 
     df = pd.DataFrame(bars[:-1], columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
