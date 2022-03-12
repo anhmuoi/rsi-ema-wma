@@ -79,14 +79,14 @@ def rsi_signal(df):
                 for j in range(i+1, len(df)-1):
                     if (df['rsi_start'][i] == True):
                         if(((df['rsi'][j] == df['rsi_ema'][j]) or ((df['rsi_ema'][j] - df['rsi'][j]>0) and (df['rsi_ema'][j+1] - df['rsi'][j+1]<0))) and (abs(df['rsi'][i] - df['rsi'][j]) > SLOPE)) and count<2:
-                            df.at[j, 'start_buy'] = True
-                            df.at[j, 'start_sell'] = False
+                            df.at[j+1, 'start_buy'] = True
+                            df.at[j+1, 'start_sell'] = False
                             count = count + 1
                             print(abs(df['rsi'][i] - df['rsi'][j]),i,j,'buy')
                         elif (df['rsi'][j] > df['rsi_wma'][j]) or count == 2:
                             df.at[i, 'rsi_start'] = False
                             count = 0
-                        if(df['rsi'][len(df)-1] == df['rsi_ema'][len(df)-1]) or ((df['rsi_ema'][len(df)-2] - df['rsi'][len(df)-2]>0) and (df['rsi_ema'][len(df)-1] - df['rsi'][len(df)-1]<0)) and count<2 and j == len(df)-1:
+                        if(df['rsi'][len(df)-1] == df['rsi_ema'][len(df)-1]) or ((df['rsi_ema'][len(df)-2] - df['rsi'][len(df)-2]>0) and (df['rsi_ema'][len(df)-1] - df['rsi'][len(df)-1]<0)) and count<2 and j == len(df)-2:
                             df.at[len(df)-1, 'start_buy'] = True
                             df.at[len(df)-1, 'start_sell'] = False
                             print(abs(df['rsi'][i] - df['rsi'][j]),i,j,'buy')
@@ -95,14 +95,14 @@ def rsi_signal(df):
                 for j in range(i+1, len(df)-1):
                     if (df['rsi_start'][i] == True):
                         if(((df['rsi'][j] == df['rsi_ema'][j]) or ((df['rsi_ema'][j] - df['rsi'][j]<0) and (df['rsi_ema'][j+1] - df['rsi'][j+1]>0))) and (abs(df['rsi'][i] - df['rsi'][j]) > SLOPE)) and count<2:
-                            df.at[j, 'start_sell'] = True
-                            df.at[j, 'start_buy'] = False
+                            df.at[j+1, 'start_sell'] = True
+                            df.at[j+1, 'start_buy'] = False
                             count = count + 1
                             print(abs(df['rsi'][i] - df['rsi'][j]),i,j,'sell')
                         elif (df['rsi'][j] < df['rsi_wma'][j]) or count == 2:
                             df.at[i, 'rsi_start'] = False 
                             count = 0
-                        if(df['rsi'][len(df)-1] == df['rsi_ema'][len(df)-1]) or ((df['rsi_ema'][len(df)-2] - df['rsi'][len(df)-2]<0) and (df['rsi_ema'][len(df)-1] - df['rsi'][len(df)-1]>0)) and count<2 and j == len(df)-1:
+                        if(df['rsi'][len(df)-1] == df['rsi_ema'][len(df)-1]) or ((df['rsi_ema'][len(df)-2] - df['rsi'][len(df)-2]<0) and (df['rsi_ema'][len(df)-1] - df['rsi'][len(df)-1]>0)) and count<2 and j == len(df)-2:
                             df.at[len(df)-1, 'start_sell'] = True
                             df.at[len(df)-1, 'start_buy'] = False
                             print(abs(df['rsi'][i] - df['rsi'][j]),i,j,'sell')
@@ -181,7 +181,7 @@ def run_bot():
     df['rsi_wma'] = ta.WMA(df['rsi'], timeperiod=45)
     # ema of rsi
     df['rsi_ema'] = ta.EMA(df['rsi'], timeperiod=9)
-
+    print(len(df))
     rsi_df =  rsi_signal(df)
     check_buy_sell_signals(rsi_df)
     rsi_df = pd.DataFrame(rsi_df, columns=['timestamp','start_buy', 'start_sell'])
