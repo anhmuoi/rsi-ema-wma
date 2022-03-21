@@ -98,9 +98,9 @@ def rsi_signal(df):
                                     df.at[j+1, 'start_buy'] = True
                                     df.at[j+1, 'start_sell'] = False
                                     count = count + 1
-                                    print(abs(df['rsi'][i] - df['rsi'][j]),i,j,tmp,'buy')
-                                else:
-                                    print(tmp,df['timestamp'][i])
+                                    # print(abs(df['rsi'][i] - df['rsi'][j]),i,j,tmp,'buy')
+                                # else:
+                                #     print(tmp,df['timestamp'][i])
                             elif count == 1:
                                 df.at[j+1, 'start_buy'] = True
                                 df.at[j+1, 'start_sell'] = False
@@ -127,7 +127,7 @@ def rsi_signal(df):
                                     df.at[len(df)-1, 'start_buy'] = True
                                     df.at[len(df)-1, 'start_sell'] = False
                                     count = count + 1
-                                    print(abs(df['rsi'][i] - df['rsi'][j]),i,len(df)-1,tmp,'buy')
+                                    # print(abs(df['rsi'][i] - df['rsi'][j]),i,len(df)-1,tmp,'buy')
                             elif count == 1:
                                 df.at[len(df)-1, 'start_buy'] = True
                                 df.at[len(df)-1, 'start_sell'] = False
@@ -151,18 +151,18 @@ def rsi_signal(df):
                                         tmp_s_index+=1
                                         tmp_s = df['rsi'][k]
                                     else:
-                                        print(tmp_s,df['timestamp'][i],'break')
+                                        # print(tmp_s,df['timestamp'][i],'break')
                                         break
                                 if (tmp_s - df['rsi'][i] > 18):
                                     df.at[j+1, 'start_sell'] = True
                                     df.at[j+1, 'start_buy'] = False
-                                    print(tmp_s_index)
+                                    # print(tmp_s_index)
                                     count = count + 1
-                                    print(abs(df['rsi'][i] - df['rsi'][j]),i,j,df['timestamp'][j],'sell')
+                                    # print(abs(df['rsi'][i] - df['rsi'][j]),i,j,df['timestamp'][j],'sell')
                             elif count == 1:
                                 df.at[j+1, 'start_sell'] = True
                                 df.at[j+1, 'start_buy'] = False 
-                                print(abs(df['rsi'][i] - df['rsi'][j]),i,j,df['timestamp'][j], count,'sell')
+                                # print(abs(df['rsi'][i] - df['rsi'][j]),i,j,df['timestamp'][j], count,'sell')
                                 count = count + 1      
                         elif (df['rsi'][j] < df['rsi_wma'][j]) or count == 2:
                             df.at[i, 'rsi_start'] = False 
@@ -184,9 +184,9 @@ def rsi_signal(df):
                                 if (tmp_s - df['rsi'][i] > 20):
                                     df.at[[len(df)-1], 'start_sell'] = True
                                     df.at[[len(df)-1], 'start_buy'] = False
-                                    print(tmp_s_index)
+                                    # print(tmp_s_index)
                                     count = count + 1
-                                    print(abs(df['rsi'][i] - df['rsi'][[len(df)-1]]),i,[len(df)-1],'sell')
+                                    # print(abs(df['rsi'][i] - df['rsi'][[len(df)-1]]),i,[len(df)-1],'sell')
                             elif count == 1:
                                 df.at[[len(df)-1], 'start_sell'] = True
                                 df.at[[len(df)-1], 'start_buy'] = False 
