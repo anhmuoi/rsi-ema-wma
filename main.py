@@ -19,7 +19,7 @@ import time
 
 SYMBOL = 'BTC/USDT'
 SYMBOL_FREE = 'BTC'
-LIMIT = 1000
+LIMIT = 300
 ANGLE = 10
 
 TIME_FRAME = '5m'
@@ -284,7 +284,7 @@ def run_bot():
     result = rsi_df[(rsi_df['start_buy'] == True) | (rsi_df['start_sell'] == True)]
     print(result)
 # mỗi 2 giây chạy một lần  
-schedule.every(2).seconds.do(run_bot)
+schedule.every(5).seconds.do(run_bot)
 
 
 while True:
