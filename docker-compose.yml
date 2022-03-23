@@ -1,6 +1,0 @@
-trading_bot:
-    build: .
-    dockerfile: Dockerfile
-    working_dir: /var/www/html
-    volumes:
-        - .:/var/www/html

@@ -4,7 +4,6 @@ import schedule
 import pandas as pd
 import talib as ta
 import math as math
-# from web3 import Web3, EthereumTesterProvider
 from datetime import datetime  
 from datetime import timedelta  
 
