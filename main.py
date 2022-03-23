@@ -4,11 +4,13 @@ import schedule
 import pandas as pd
 import talib as ta
 import math as math
+# from web3 import Web3, EthereumTesterProvider
 from datetime import datetime  
 from datetime import timedelta  
 
 pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns', None)
+
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -16,8 +18,8 @@ warnings.filterwarnings('ignore')
 from datetime import datetime
 import time
 
-SYMBOL = 'ETH/USDT'
-SYMBOL_FREE = 'ETH'
+SYMBOL = 'BTC/USDT'
+SYMBOL_FREE = 'BTC'
 LIMIT = 1000
 ANGLE = 10
 
@@ -182,14 +184,14 @@ def rsi_signal(df):
                                     else:
                                         break
                                 if (tmp_s - df['rsi'][i] > 20):
-                                    df.at[[len(df)-1], 'start_sell'] = True
-                                    df.at[[len(df)-1], 'start_buy'] = False
+                                    df.at[len(df)-1, 'start_sell'] = True
+                                    df.at[len(df)-1, 'start_buy'] = False
                                     # print(tmp_s_index)
                                     count = count + 1
                                     # print(abs(df['rsi'][i] - df['rsi'][[len(df)-1]]),i,[len(df)-1],'sell')
                             elif count == 1:
-                                df.at[[len(df)-1], 'start_sell'] = True
-                                df.at[[len(df)-1], 'start_buy'] = False 
+                                df.at[len(df)-1, 'start_sell'] = True
+                                df.at[len(df)-1, 'start_buy'] = False 
                                 count = count + 1      
     return df
 
