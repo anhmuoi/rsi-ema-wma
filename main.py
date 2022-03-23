@@ -75,7 +75,7 @@ def rsi_signal(df):
 
     for i in range(45,len(df)-1):
         tmp = (df['rsi'][i] + df['rsi'][i+1]) / 2
-        if (((abs(df['rsi'][i] - df['rsi_wma'][i]) < 2.5) and (abs(df['rsi'][i] - df['rsi_ema'][i])) < 2.5) or ((abs(tmp - df['rsi_wma'][i]) < 2.5) and (abs(tmp - df['rsi_ema'][i]) < 2.5))) and (abs(df['rsi_ema'][i] - df['rsi_wma'][i]) < 2.5) :
+        if (((abs(df['rsi'][i] - df['rsi_wma'][i]) < 3.5) and (abs(df['rsi'][i] - df['rsi_ema'][i])) < 3.5) or ((abs(tmp - df['rsi_wma'][i]) < 3.5) and (abs(tmp - df['rsi_ema'][i]) < 3.5))) and (abs(df['rsi_ema'][i] - df['rsi_wma'][i]) < 3.5) :
             df.at[i, 'rsi_start'] = True
             if (df['rsi'][i+1] < df['rsi_wma'][i+1]) and (printAngle((20, df['rsi'][i]),(22, df['rsi_ema'][i+1]),(22, df['rsi'][i+1])) > ANGLE):
                 count = 0
@@ -221,6 +221,8 @@ def check_buy_sell_signals(df):
             if (30 <= rsi_tmp <= 40):
                 takeprofit = df['close'][last_row_index] + df['close'][last_row_index] * 0.08
             stoploss = df['close'][last_row_index] - df['close'][last_row_index] * 0.1
+            if sell == True:
+                sell = False
             buy = True
             count_buy+=1
 
@@ -243,6 +245,8 @@ def check_buy_sell_signals(df):
             rsi_tmp = df['rsi'][last_row_index]
             stoploss = df['close'][last_row_index] + df['close'][last_row_index] * 0.1
             takeprofit = df['close'][last_row_index] - df['close'][last_row_index] * 0.2
+            if buy == True:
+                buy = False
             sell = True
             count_sell += 1
 
