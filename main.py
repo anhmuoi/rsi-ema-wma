@@ -154,7 +154,7 @@ def rsi_signal(df):
                                     else:
                                         # print(tmp_s,df['timestamp'][i],'break')
                                         break
-                                if (tmp_s - df['rsi'][i] > 18):
+                                if (tmp_s - df['rsi'][i] > 20):
                                     df.at[j+1, 'start_sell'] = True
                                     df.at[j+1, 'start_buy'] = False
                                     # print(tmp_s_index)
@@ -194,8 +194,10 @@ def rsi_signal(df):
                                 count = count + 1      
     return df
 
-stoploss = 0
-takeprofit = 0
+stoploss_sell = 0
+takeprofit_sell = 0
+stoploss_buy = 0
+takeprofit_buy = 0
 rsi_tmp = 0
 buy = False    
 sell = False
@@ -206,8 +208,10 @@ check_sell_signal = 0
 # check buy sell signals
 def check_buy_sell_signals(df):
     last_row_index = len(df.index) - 1
-    global stoploss
-    global takeprofit
+    global stoploss_buy
+    global takeprofit_buy
+    global stoploss_sell
+    global takeprofit_sell
     global rsi_tmp 
     global buy
     global sell
@@ -223,8 +227,8 @@ def check_buy_sell_signals(df):
             print(order)
             rsi_tmp = df['rsi'][last_row_index]
             if (30 <= rsi_tmp <= 40):
-                takeprofit = df['close'][last_row_index] + df['close'][last_row_index] * 0.08
-            stoploss = df['close'][last_row_index] - df['close'][last_row_index] * 0.1
+                takeprofit_buy = df['close'][last_row_index] + df['close'][last_row_index] * 0.08
+            stoploss_buy = df['close'][last_row_index] - df['close'][last_row_index] * 0.1
             if sell == True:
                 sell = False
             buy = True
@@ -232,12 +236,12 @@ def check_buy_sell_signals(df):
             check_buy_signal = df['timestamp'][last_row_index]
 
 
-        if ((df['close'][last_row_index] <= stoploss) and (stoploss != 0)) or ((df['close'][last_row_index] >= takeprofit) and (takeprofit != 0)) or ((rsi_tmp < 30 and (rsi_tmp != 0) and (df['rsi'][last_row_index] > 65))) or (((df['rsi'][last_row_index] == df['rsi_ema'][last_row_index])  or ((df['rsi'][last_row_index-1] > df['rsi_ema'][last_row_index-1]) and (df['rsi'][last_row_index] < df['rsi_ema'][last_row_index]))) and (df['rsi_wma'][last_row_index] < df['rsi_ema'][last_row_index])) and (buy == True) and (count_buy != 0):
+        if ((df['close'][last_row_index] <= stoploss_buy) and (stoploss_buy != 0)) or ((df['close'][last_row_index] >= takeprofit_buy) and (takeprofit_buy != 0)) or ((rsi_tmp < 30 and (rsi_tmp != 0) and (df['rsi'][last_row_index] > 65))) or (((df['rsi'][last_row_index] == df['rsi_ema'][last_row_index])  or ((df['rsi'][last_row_index-1] > df['rsi_ema'][last_row_index-1]) and (df['rsi'][last_row_index] < df['rsi_ema'][last_row_index]))) and (df['rsi_wma'][last_row_index] < df['rsi_ema'][last_row_index])) and (buy == True) and (count_buy != 0):
             print('sell')
             order = exchange.create_market_sell_order(SYMBOL, 0.0005)
             print(order)
-            stoploss = 0
-            takeprofit = 0
+            stoploss_buy = 0
+            takeprofit_buy = 0
             rsi_tmp = 0    
             buy = False
             count_buy = 0
@@ -249,8 +253,8 @@ def check_buy_sell_signals(df):
             order = exchange.create_market_sell_order(SYMBOL, 0.0005)
             print(order) 
             rsi_tmp = df['rsi'][last_row_index]
-            stoploss = df['close'][last_row_index] + df['close'][last_row_index] * 0.1
-            takeprofit = df['close'][last_row_index] - df['close'][last_row_index] * 0.2
+            stoploss_sell = df['close'][last_row_index] + df['close'][last_row_index] * 0.1
+            takeprofit_sell = df['close'][last_row_index] - df['close'][last_row_index] * 0.2
             if buy == True:
                 buy = False
             sell = True
@@ -258,12 +262,12 @@ def check_buy_sell_signals(df):
             check_sell_signal = df['timestamp'][last_row_index]
 
 
-        if ((df['close'][last_row_index] >= stoploss) and (stoploss != 0)) or ((df['close'][last_row_index] <= takeprofit) and (takeprofit != 0)) or ((rsi_tmp >= 65 and rsi_tmp != 0) and (df['rsi'][last_row_index] <= 40)) or (((df['rsi'][last_row_index] == df['rsi_ema'][last_row_index])  or ((df['rsi'][last_row_index-1] < df['rsi_ema'][last_row_index-1]) and (df['rsi'][last_row_index] > df['rsi_ema'][last_row_index]))) and (df['rsi_wma'][last_row_index] > df['rsi_ema'][last_row_index])) and (sell == True) and (count_sell != 0):
+        if ((df['close'][last_row_index] >= stoploss_sell) and (stoploss_sell != 0)) or ((df['close'][last_row_index] <= takeprofit_sell) and (takeprofit_sell != 0)) or ((rsi_tmp >= 65 and rsi_tmp != 0) and (df['rsi'][last_row_index] <= 40)) or (((df['rsi'][last_row_index] == df['rsi_ema'][last_row_index])  or ((df['rsi'][last_row_index-1] < df['rsi_ema'][last_row_index-1]) and (df['rsi'][last_row_index] > df['rsi_ema'][last_row_index]))) and (df['rsi_wma'][last_row_index] > df['rsi_ema'][last_row_index])) and (sell == True) and (count_sell != 0):
             print('buy')
             order = exchange.create_market_buy_order(SYMBOL, 0.0005)
             print(order)
-            stoploss = 0
-            takeprofit = 0
+            stoploss_sell = 0
+            takeprofit_sell = 0
             rsi_tmp = 0   
             sell = False 
             count_sell = 0
