@@ -19,13 +19,21 @@ import time
 
 SYMBOL = 'BTC/USDT'
 SYMBOL_FREE = 'BTC'
-LIMIT = 400
+
+
+LIMIT = 50
+
+# góc tõe ra giữa rsi và ema khi 3 đường giao nhau
 ANGLE = 10
 
+# số lượng coin khi vào lệnh bán và mua
+AMOUNT = 0.0005
+
+# khung giờ
 TIME_FRAME = '5m'
 
+# độ chênh lệch giữa rsi tại điểm giao nhau và rsi tại điểm vào
 SLOPE = 10
-#this is the slope of rsi
 
 
 exchange = ccxt.binance({
@@ -225,10 +233,11 @@ def check_buy_sell_signals(df):
     global check_buy_signal
     global check_sell_signal
 
-    if (exchange.fetch_balance()[SYMBOL_FREE]['free'] >= 0.001):
+    # check số dư của tài khoản
+    if (exchange.fetch_balance()[SYMBOL_FREE]['free'] >= 2 * AMOUNT):
         if (df['start_buy'][last_row_index] == True) and ((count_buy == 0) or (count_buy == 1)) and (check_buy_signal != df['timestamp'][last_row_index]):
             print('buy buy buy')
-            order = exchange.create_market_buy_order(SYMBOL, 0.0005)
+            order = exchange.create_market_buy_order(SYMBOL, AMOUNT)
             print(order)
             rsi_tmp_buy = (df['rsi'][last_row_index-1]+df['rsi'][last_row_index])/2
             if (30 <= rsi_tmp_buy <= 40):
@@ -243,8 +252,12 @@ def check_buy_sell_signals(df):
 
         if ((df['close'][last_row_index] <= stoploss_buy) and (stoploss_buy != 0)) or ((df['close'][last_row_index] >= takeprofit_buy) and (takeprofit_buy != 0)) or ((rsi_tmp_buy < 30 and (rsi_tmp_buy != 0) and (df['rsi'][last_row_index] > 65))) or (((df['rsi'][last_row_index] == df['rsi_ema'][last_row_index])  or ((df['rsi'][last_row_index-1] > df['rsi_ema'][last_row_index-1]) and (df['rsi'][last_row_index] < df['rsi_ema'][last_row_index]))) and (df['rsi_wma'][last_row_index] < df['rsi_ema'][last_row_index])) and (buy == True) and (count_buy != 0):
             print('sell')
-            order = exchange.create_market_sell_order(SYMBOL, 0.0005)
-            print(order)
+            if(count_buy == 2):
+                order = exchange.create_market_sell_order(SYMBOL, 2*AMOUNT)
+                print(order)
+            elif(count_buy == 1):
+                order = exchange.create_market_sell_order(SYMBOL, AMOUNT)
+                print(order)
             stoploss_buy = 0
             takeprofit_buy = 0
             rsi_tmp_buy = 0    
@@ -255,7 +268,7 @@ def check_buy_sell_signals(df):
 
         if (df['start_sell'][last_row_index] == True) and ((count_sell == 0) or (count_sell == 1)) and (check_sell_signal != df['timestamp'][last_row_index]):
             print('sell sell sell')
-            order = exchange.create_market_sell_order(SYMBOL, 0.0005)
+            order = exchange.create_market_sell_order(SYMBOL, AMOUNT)
             print(order) 
             rsi_tmp_sell = (df['rsi'][last_row_index]+ df['rsi'][last_row_index-1])/2
             stoploss_sell = df['close'][last_row_index] + df['close'][last_row_index] * 0.1
@@ -269,8 +282,12 @@ def check_buy_sell_signals(df):
 
         if ((df['close'][last_row_index] >= stoploss_sell) and (stoploss_sell != 0)) or ((df['close'][last_row_index] <= takeprofit_sell) and (takeprofit_sell != 0)) or ((rsi_tmp_sell >= 65 and rsi_tmp_sell != 0) and (df['rsi'][last_row_index] <= 40)) or (((df['rsi'][last_row_index] == df['rsi_ema'][last_row_index])  or ((df['rsi'][last_row_index-1] < df['rsi_ema'][last_row_index-1]) and (df['rsi'][last_row_index] > df['rsi_ema'][last_row_index]))) and (df['rsi_wma'][last_row_index] > df['rsi_ema'][last_row_index])) and (sell == True) and (count_sell != 0):
             print('buy')
-            order = exchange.create_market_buy_order(SYMBOL, 0.0005)
-            print(order)
+            if (count_sell == 2):
+                order = exchange.create_market_buy_order(SYMBOL, 2*AMOUNT)
+                print(order)
+            elif (count_sell == 1):
+                order = exchange.create_market_buy_order(SYMBOL, AMOUNT)
+                print(order)
             stoploss_sell = 0
             takeprofit_sell = 0
             rsi_tmp_sell = 0   
@@ -303,7 +320,7 @@ def run_bot():
     rsi_df = pd.DataFrame(rsi_df, columns=['datetime','start_buy', 'start_sell'])
 
     result = rsi_df[(rsi_df['start_buy'] == True) | (rsi_df['start_sell'] == True)]
-    print(result)
+    # print(result)
 # mỗi 5 giây chạy một lần  
 schedule.every(5).seconds.do(run_bot)
 
